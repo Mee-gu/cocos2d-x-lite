@@ -18,7 +18,18 @@ bool GLES2Shader::Initialize(const GFXShaderInfo &info) {
   blocks_ = info.blocks;
   samplers_ = info.samplers;
   
+
+
   gpu_shader_ = CC_NEW(GLES2GPUShader);
+  gpu_shader_->name = name_;
+  gpu_shader_->blocks = blocks_;
+  gpu_shader_->samplers = samplers_;
+  for (auto stage : stages_)
+  {
+      GLES2GPUShaderStage gpuShaderStage = { stage.type, stage.source, stage.macros, 0};
+      gpu_shader_->gpu_stages.emplace_back(std::move(gpuShaderStage));
+  }
+
   GLES2CmdFuncCreateShader((GLES2Device*)device_, gpu_shader_);
   
   return true;

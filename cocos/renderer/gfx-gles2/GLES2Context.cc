@@ -97,7 +97,7 @@ bool GLES2Context::Initialize(const GFXContextInfo &info) {
     is_primary_ctx_ = true;
     window_handle_ = info.window_handle;
 
-#if (CC_PLATFORM == CC_PLATFORM_WINDOWS)
+#if (0 && CC_PLATFORM == CC_PLATFORM_WINDOWS)
     native_display_ = (NativeDisplayType)GetDC((HWND)window_handle_);
     if (!native_display_) {
       return false;

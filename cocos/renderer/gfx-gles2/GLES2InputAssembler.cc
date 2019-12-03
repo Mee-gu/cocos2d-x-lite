@@ -33,7 +33,7 @@ bool GLES2InputAssembler::Initialize(const GFXInputAssemblerInfo &info) {
     GLES2Buffer* vb = (GLES2Buffer*)vertex_buffers_[i];
     gpu_input_assembler_->gpu_vertex_buffers[i] = vb->gpu_buffer();
   }
-  
+
   GLES2CmdFuncCreateInputAssembler((GLES2Device*)device_, gpu_input_assembler_);
   
   return true;
