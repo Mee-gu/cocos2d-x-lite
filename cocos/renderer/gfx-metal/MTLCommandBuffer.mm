@@ -323,10 +323,12 @@ void CCMTLCommandBuffer::bindStates()
     commandBindState->blendConstants = _currentBlendConstants;
     commandBindState->depthBounds = *_currentDepthBounds;
     
-    if ( (commandBindState->viewportDirty = _isViewportDirty) )
+    commandBindState->viewportDirty = _isViewportDirty;
+    if (_isViewportDirty)
         commandBindState->viewport = mu::toMTLViewport(_currentViewport);
     
-    if ( (commandBindState->scissorDirty = _isScissorDirty) )
+    commandBindState->scissorDirty = _isScissorDirty;
+    if (_isScissorDirty)
         commandBindState->scissorRect = mu::toMTLScissorRect(_currentScissor);
     
     commandBindState->pipelineState = _currentPipelineState;

@@ -183,8 +183,17 @@ void CCMTLQueue::executeCommands(const CCMTLCommandPackage* commandPackage, id<M
                     if(binding.shaderStages & GFXShaderType::VERTEX)
                     {
                         if(binding.buffer)
-                            [encoder setVertexBuffer:static_cast<CCMTLBuffer*>(binding.buffer)->getMTLBuffer()
-                                              offset:0 atIndex:binding.binding];
+                        {
+                            if(static_cast<CCMTLBuffer*>(binding.buffer)->getMTLBuffer())
+                            {
+                                [encoder setVertexBuffer:static_cast<CCMTLBuffer*>(binding.buffer)->getMTLBuffer()
+                                                  offset:0 atIndex:binding.binding];
+                            }
+                            else
+                            {
+                                [encoder setVertexBytes:static_cast<CCMTLBuffer*>(binding.buffer)->getBytes() length:binding.buffer->getSize() atIndex:binding.binding];
+                            }
+                        }
                         
                         if(binding.texView)
                             [encoder setVertexTexture:static_cast<CCMTLTextureView*>(binding.texView)->getMTLTexture()
@@ -198,8 +207,17 @@ void CCMTLQueue::executeCommands(const CCMTLCommandPackage* commandPackage, id<M
                     if(binding.shaderStages & GFXShaderType::FRAGMENT)
                     {
                         if(binding.buffer)
-                            [encoder setFragmentBuffer:static_cast<CCMTLBuffer*>(binding.buffer)->getMTLBuffer()
-                                              offset:0 atIndex:binding.binding];
+                        {
+                            if(static_cast<CCMTLBuffer*>(binding.buffer)->getMTLBuffer())
+                            {
+                                [encoder setFragmentBuffer:static_cast<CCMTLBuffer*>(binding.buffer)->getMTLBuffer()
+                                offset:0 atIndex:binding.binding];
+                            }
+                            else
+                            {
+                                [encoder setFragmentBytes:static_cast<CCMTLBuffer*>(binding.buffer)->getBytes() length:binding.buffer->getSize() atIndex:binding.binding];
+                            }
+                        }
                         
                         if(binding.texView)
                             [encoder setFragmentTexture:static_cast<CCMTLTextureView*>(binding.texView)->getMTLTexture()
@@ -229,9 +247,16 @@ void CCMTLQueue::executeCommands(const CCMTLCommandPackage* commandPackage, id<M
                         auto index = std::get<0>(bindingInfo);
                         auto stream = std::get<1>(bindingInfo);
                         id<MTLBuffer> vertexBuffer = static_cast<CCMTLBuffer*>(inputAssembler->_vertexBuffers[stream])->getMTLBuffer();
-                        [encoder setVertexBuffer:vertexBuffer
-                                          offset:0
-                                         atIndex:index];
+                        if(vertexBuffer)
+                        {
+                            [encoder setVertexBuffer:vertexBuffer
+                                              offset:0
+                                             atIndex:index];
+                        }
+                        else
+                        {
+                            [encoder setVertexBytes:static_cast<CCMTLBuffer*>(inputAssembler->_vertexBuffers[stream])->getBytes() length:inputAssembler->_vertexBuffers[stream]->getSize() atIndex:index];
+                        }
                     }
                 }
                 
@@ -245,7 +270,7 @@ void CCMTLQueue::executeCommands(const CCMTLCommandPackage* commandPackage, id<M
                     auto indirectBuffer = inputAssembler->getIndirectBuffer();
                     if (!indirectBuffer)
                     {
-                        if (mtlIndexBuffer && cmd->drawInfo.indexCount >= 0)
+                        if (cmd->drawInfo.indexCount > 0)
                         {
                             NSUInteger offset = 0;
                             offset += cmd->drawInfo.firstIndex * inputAssembler->getIndexBuffer()->getStride();
