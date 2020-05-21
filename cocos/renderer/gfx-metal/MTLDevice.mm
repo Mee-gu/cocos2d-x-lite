@@ -249,7 +249,7 @@ GFXRenderPass* CCMTLDevice::createRenderPass(const GFXRenderPassInfo& info)
 
 GFXFramebuffer* CCMTLDevice::createFramebuffer(const GFXFramebufferInfo& info)
 {
-    auto frameBuffer = CC_NEW(CCMTLFrameBuffer(this) );
+    auto frameBuffer = CC_NEW(CCMTLFramebuffer(this) );
     if (frameBuffer && frameBuffer->initialize(info) )
         return frameBuffer;
     
@@ -316,11 +316,6 @@ void CCMTLDevice::blitBuffer(void* srcData, uint offset, uint size, void* dstBuf
                      destinationOffset:offset
                                   size:size];
     [blitCommandEncoder endEncoding];
-
-    // Add a completion handler and commit the command buffer.
-    [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> cb) {
-        // Private buffer is populated.
-    }];
     [commandBuffer commit];
 }
 

@@ -51,36 +51,22 @@ bool CCMTLBuffer::initialize(const GFXBufferInfo& info)
     if (_usage & GFXBufferUsage::VERTEX ||
         _usage & GFXBufferUsage::UNIFORM)
     {
-//        for single-use data smaller than 4 KB, use setVertexBytes:length:atIndex: instead
+        //for single-use data smaller than 4 KB, use setVertexBytes:length:atIndex: instead
+        //see more detail at https://developer.apple.com/documentation/metal/mtlrendercommandencoder/1515846-setvertexbytes?language=objc
         if (_size < MINIMUMR_REQUIRED_SIZE_4KB)
         {
-            _bytes = static_cast<uint8_t*>(CC_MALLOC(_size));
+            _useOptimizedBufferEncoder = true;
+            _bufferBytes = static_cast<uint8_t*>(CC_MALLOC(_size));
             _device->getMemoryStatus().bufferSize += _size;
         }
         else
         {
-            _mtlResourceOptions = mu::toMTLResourseOption(info.memUsage);
-            _mtlBuffer = [id<MTLDevice>(((CCMTLDevice*)_device)->getMTLDevice() ) newBufferWithLength:_size
-                                                                                              options:_mtlResourceOptions];
-            if (_mtlBuffer == nil)
-            {
-                _status = GFXStatus::FAILED;
-                CCASSERT(false, "Failed to create MTLBuffer.");
-                return false;
-            }
+            createMTLBuffer(_size, _memUsage);
         }
     }
     else if(_usage & GFXBufferUsage::INDEX)
     {
-        _mtlResourceOptions = mu::toMTLResourseOption(info.memUsage);
-        _mtlBuffer = [id<MTLDevice>(((CCMTLDevice*)_device)->getMTLDevice() ) newBufferWithLength:_size
-                                                                                          options:_mtlResourceOptions];
-        if (_mtlBuffer == nil)
-        {
-            _status = GFXStatus::FAILED;
-            CCASSERT(false, "Failed to create MTLBuffer.");
-            return false;
-        }
+        createMTLBuffer(_size, _memUsage);
     }
     else if (_usage & GFXBufferUsageBit::INDIRECT)
     {
@@ -109,6 +95,23 @@ bool CCMTLBuffer::initialize(const GFXBufferInfo& info)
     return true;
 }
 
+bool CCMTLBuffer::createMTLBuffer(uint size, GFXMemoryUsage usage)
+{
+    if(_mtlBuffer)
+        [_mtlBuffer release];
+    
+    _mtlResourceOptions = mu::toMTLResourseOption(usage);
+    _mtlBuffer = [id<MTLDevice>(((CCMTLDevice*)_device)->getMTLDevice() ) newBufferWithLength:size
+                                                                                      options:_mtlResourceOptions];
+    if (_mtlBuffer == nil)
+    {
+        _status = GFXStatus::FAILED;
+        CCASSERT(false, "Failed to create MTLBuffer.");
+        return false;
+    }
+    return true;
+}
+
 void CCMTLBuffer::destroy()
 {
     if (_mtlBuffer)
@@ -131,11 +134,11 @@ void CCMTLBuffer::destroy()
         _buffer = nullptr;
     }
     
-    if(_bytes)
+    if(_bufferBytes)
     {
-        CC_FREE(_bytes);
+        CC_FREE(_bufferBytes);
         _device->getMemoryStatus().bufferSize -= _size;
-        _bytes = nullptr;
+        _bufferBytes = nullptr;
     }
     _status = GFXStatus::UNREADY;
 }
@@ -149,18 +152,13 @@ void CCMTLBuffer::resize(uint size)
         _usage & GFXBufferUsage::INDEX ||
         _usage & GFXBufferUsage::UNIFORM)
     {
-        if (_mtlBuffer)
+        if (_useOptimizedBufferEncoder)
         {
-            [_mtlBuffer release];
-        
-            _mtlBuffer = [id<MTLDevice>(((CCMTLDevice*)_device)->getMTLDevice() ) newBufferWithLength:size
-                                                                                              options:_mtlResourceOptions];
-            if (!_mtlBuffer)
-            {
-                _status = GFXStatus::FAILED;
-                CC_LOG_ERROR("Failed to resize buffer for metal buffer.");
-                return;
-            }
+            resizeBuffer(&_bufferBytes, size, _size);
+        }
+        else
+        {
+            createMTLBuffer(size, _memUsage);
         }
     }
     
@@ -210,6 +208,9 @@ void CCMTLBuffer::update(void* buffer, uint offset, uint size)
         memcpy((uint8_t*)_indirects.data() + offset, buffer, size);
         return;
     }
+   
+    if(_bufferBytes)
+        memcpy(_bufferBytes + offset, buffer, size);
 
     if(_bytes)
     {
@@ -235,6 +236,48 @@ void CCMTLBuffer::update(void* buffer, uint offset, uint size)
         memcpy(_transferBuffer + offset, buffer, size);
         return;
     }
+}
+
+void CCMTLBuffer::encodeBuffer(id<MTLRenderCommandEncoder> encoder, uint offset, uint binding, GFXShaderType stages)
+{
+    if(encoder == nil)
+    {
+        CC_LOG_ERROR("CCMTLBuffer::encodeBuffer: MTLRenderCommandEncoder should not be nil.");
+        return;
+    }
+    
+    if(stages & GFXShaderType::VERTEX)
+    {
+        if(_useOptimizedBufferEncoder)
+        {
+            [encoder setVertexBytes:_bufferBytes
+                             length:_size
+                            atIndex:binding];
+        }
+        else
+        {
+            [encoder setVertexBuffer:_mtlBuffer
+                              offset:offset
+                             atIndex:binding];
+        }
+    }
+    
+    if(stages & GFXShaderType::FRAGMENT)
+    {
+        if(_useOptimizedBufferEncoder)
+        {
+            [encoder setFragmentBytes:_bufferBytes
+                               length:_size
+                              atIndex:binding];
+        }
+        else
+        {
+            [encoder setFragmentBuffer:_mtlBuffer
+                                offset:offset
+                               atIndex:binding];
+        }
+    }
+    
 }
 
 NS_CC_END
