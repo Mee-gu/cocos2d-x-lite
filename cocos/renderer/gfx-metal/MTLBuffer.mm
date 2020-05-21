@@ -167,7 +167,6 @@ void CCMTLBuffer::resize(uint size)
     _count = _size / _stride;
     resizeBuffer(&_transferBuffer, _size, oldSize);
     resizeBuffer(&_buffer, _size, oldSize);
-    resizeBuffer(&_bytes, _size, oldSize);
     _indirects.resize(_count);
     _status = GFXStatus::SUCCESS;
 }
@@ -212,11 +211,6 @@ void CCMTLBuffer::update(void* buffer, uint offset, uint size)
     if(_bufferBytes)
         memcpy(_bufferBytes + offset, buffer, size);
 
-    if(_bytes)
-    {
-        memcpy(_bytes + offset, buffer, size);
-    }
-    
     if(_mtlBuffer)
     {
         if(_mtlResourceOptions == MTLResourceStorageModePrivate)
