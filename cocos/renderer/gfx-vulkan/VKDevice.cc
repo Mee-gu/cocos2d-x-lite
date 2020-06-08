@@ -469,12 +469,13 @@ void CCVKDevice::buildSwapchain()
         _depthStencilTextures[i]->resize(_width, _height);
         _gpuSwapchain->depthStencilImages.push_back(((CCVKTexture*)_depthStencilTextures[i])->gpuTexture()->vkImage);
 
-        /*_depthStencilTextureViews[i]->destroy();
+        /*_depthStencilTextureViews[i]->destroy();*/
         GFXTextureViewInfo textureViewInfo;
         textureViewInfo.texture = _depthStencilTextures[i];
         textureViewInfo.type = GFXTextureType::TEX2D;
         textureViewInfo.format = _context->getDepthStencilFormat();
-        _depthStencilTextureViews[i]->initialize(textureViewInfo);*/
+        //_depthStencilTextureViews[i]->initialize(textureViewInfo);
+        _depthStencilTextures[i]->initialize(textureViewInfo);
         _gpuSwapchain->depthStencilImageViews.push_back(((CCVKTexture*)_depthStencilTextures[i])->gpuTextureView()->vkImageView);
 
         VkImageViewCreateInfo imageViewCreateInfo{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
