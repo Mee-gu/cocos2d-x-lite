@@ -9,7 +9,6 @@ class CCVKGPUSwapchain;
 class CCVKGPUSemaphorePool;
 class CCVKGPUFencePool;
 class CCVKTexture;
-class CCVKTextureView;
 class CCVKRenderPass;
 class CCVKBuffer;
 
