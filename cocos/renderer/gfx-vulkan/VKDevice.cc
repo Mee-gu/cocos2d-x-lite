@@ -9,7 +9,6 @@
 #include "VKCommandBuffer.h"
 #include "VKBuffer.h"
 #include "VKTexture.h"
-#include "VKTextureView.h"
 #include "VKSampler.h"
 #include "VKShader.h"
 #include "VKInputAssembler.h"
@@ -224,12 +223,12 @@ bool CCVKDevice::initialize(const GFXDeviceInfo& info)
         CCVKTexture* texture = (CCVKTexture*)createTexture(depthStecnilTexInfo);
         _depthStencilTextures.push_back(texture);
 
-        GFXTextureViewInfo depthStecnilTexViewInfo;
+        /*GFXTextureViewInfo depthStecnilTexViewInfo;
         depthStecnilTexViewInfo.texture = texture;
-        depthStecnilTexViewInfo.type = GFXTextureViewType::TV2D;
+        depthStecnilTexViewInfo.type = GFXTextureType::TEX2D;
         depthStecnilTexViewInfo.format = _context->getDepthStencilFormat();
-        CCVKTextureView* textureView = (CCVKTextureView*)createTextureView(depthStecnilTexViewInfo);
-        _depthStencilTextureViews.push_back(textureView);
+        CCVKTexture* textureView = (CCVKTexture*)createTexture(depthStecnilTexViewInfo);
+        _depthStencilTextureViews.push_back(textureView);*/
     }
 
     GFXRenderPassInfo renderPassInfo;
@@ -337,11 +336,11 @@ void CCVKDevice::destroy()
     CC_SAFE_DELETE(_gpuSemaphorePool);
     CC_SAFE_DELETE(_gpuFencePool);
 
-    for (CCVKTextureView* textureView : _depthStencilTextureViews)
+    /*for (CCVKTexture* textureView : _depthStencilTextureViews)
     {
         CC_SAFE_DESTROY(textureView);
     }
-    _depthStencilTextureViews.clear();
+    _depthStencilTextureViews.clear();*/
     for (CCVKTexture* texture : _depthStencilTextures)
     {
         CC_SAFE_DESTROY(texture);
@@ -470,13 +469,13 @@ void CCVKDevice::buildSwapchain()
         _depthStencilTextures[i]->resize(_width, _height);
         _gpuSwapchain->depthStencilImages.push_back(((CCVKTexture*)_depthStencilTextures[i])->gpuTexture()->vkImage);
 
-        _depthStencilTextureViews[i]->destroy();
+        /*_depthStencilTextureViews[i]->destroy();
         GFXTextureViewInfo textureViewInfo;
         textureViewInfo.texture = _depthStencilTextures[i];
-        textureViewInfo.type = GFXTextureViewType::TV2D;
+        textureViewInfo.type = GFXTextureType::TEX2D;
         textureViewInfo.format = _context->getDepthStencilFormat();
-        _depthStencilTextureViews[i]->initialize(textureViewInfo);
-        _gpuSwapchain->depthStencilImageViews.push_back(((CCVKTextureView*)_depthStencilTextureViews[i])->gpuTexView()->vkImageView);
+        _depthStencilTextureViews[i]->initialize(textureViewInfo);*/
+        _gpuSwapchain->depthStencilImageViews.push_back(((CCVKTexture*)_depthStencilTextures[i])->gpuTextureView()->vkImageView);
 
         VkImageViewCreateInfo imageViewCreateInfo{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
         imageViewCreateInfo.image = _gpuSwapchain->swapchainImages[i];
@@ -488,7 +487,7 @@ void CCVKDevice::buildSwapchain()
 
         VK_CHECK(vkCreateImageView(_gpuDevice->vkDevice, &imageViewCreateInfo, nullptr, &_gpuSwapchain->vkSwapchainImageViews[i]));
 
-        VkImageView attachments[] = { _gpuSwapchain->vkSwapchainImageViews[i], _depthStencilTextureViews[i]->gpuTexView()->vkImageView };
+        VkImageView attachments[] = { _gpuSwapchain->vkSwapchainImageViews[i], _depthStencilTextures[i]->gpuTextureView()->vkImageView };
 
         VkFramebufferCreateInfo framebufferCreateInfo{ VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
         framebufferCreateInfo.renderPass = _renderPass->gpuRenderPass()->vkRenderPass;

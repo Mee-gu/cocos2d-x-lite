@@ -5,7 +5,6 @@
 #include "VKDevice.h"
 #include "VKRenderPass.h"
 #include "VKTexture.h"
-#include "VKTextureView.h"
 
 #define CC_GFX_DEBUG
 

@@ -70,13 +70,13 @@ bool CCVKWindow::initialize(const GFXWindowInfo &info)
 
             GFXTextureViewInfo colorTexViewInfo;
             colorTexViewInfo.texture = _colorTex;
-            colorTexViewInfo.type = GFXTextureViewType::TV2D;
+            colorTexViewInfo.type = colorTexInfo.type;
             colorTexViewInfo.format = _colorFmt;
             colorTexViewInfo.baseLevel = 0;
             colorTexViewInfo.levelCount = 1;
             colorTexViewInfo.baseLayer = 0;
             colorTexViewInfo.layerCount = 1;
-            _colorTexView = _device->createTextureView(colorTexViewInfo);
+            _colorTexView = _device->createTexture(colorTexViewInfo);
         }
         if (_depthStencilFmt != GFXFormat::UNKNOWN)
         {
@@ -93,13 +93,13 @@ bool CCVKWindow::initialize(const GFXWindowInfo &info)
 
             GFXTextureViewInfo depthStecnilTexViewInfo;
             depthStecnilTexViewInfo.texture = _depthStencilTex;
-            depthStecnilTexViewInfo.type = GFXTextureViewType::TV2D;
+            depthStecnilTexViewInfo.type = depthStecnilTexInfo.type;
             depthStecnilTexViewInfo.format = _depthStencilFmt;
             depthStecnilTexViewInfo.baseLevel = 0;
             depthStecnilTexViewInfo.levelCount = 1;
             depthStecnilTexViewInfo.baseLayer = 0;
             depthStecnilTexViewInfo.layerCount = 1;
-            _depthStencilTexView = _device->createTextureView(depthStecnilTexViewInfo);
+            _depthStencilTexView = _device->createTexture(depthStecnilTexViewInfo);
         }
     }
 
@@ -107,9 +107,9 @@ bool CCVKWindow::initialize(const GFXWindowInfo &info)
     fboInfo.renderPass = _renderPass;
     if (_colorTexView)
     {
-        fboInfo.colorViews.push_back(_colorTexView);
+        fboInfo.colorTextures.push_back(_colorTexView);
     }
-    fboInfo.depthStencilView = _depthStencilTexView;
+    fboInfo.depthStencilTexture = _depthStencilTexView;
     fboInfo.isOffscreen = _isOffscreen;
     _framebuffer = _device->createFramebuffer(fboInfo);
 
@@ -145,7 +145,7 @@ void CCVKWindow::resize(uint width, uint height)
             _colorTexView->destroy();
 
             GFXTextureViewInfo colorTexViewInfo;
-            colorTexViewInfo.type = GFXTextureViewType::TV2D;
+            colorTexViewInfo.type = _colorTex->getType();
             colorTexViewInfo.format = _colorFmt;
             _colorTexView->initialize(colorTexViewInfo);
         }
@@ -155,10 +155,10 @@ void CCVKWindow::resize(uint width, uint height)
             _depthStencilTex->resize(width, height);
             _depthStencilTexView->destroy();
 
-            GFXTextureViewInfo depth_stencil_tex_view__info;
-            depth_stencil_tex_view__info.type = GFXTextureViewType::TV2D;
-            depth_stencil_tex_view__info.format = _depthStencilFmt;
-            _depthStencilTexView->initialize(depth_stencil_tex_view__info);
+            GFXTextureViewInfo depthStencilTexViewInfo;
+            depthStencilTexViewInfo.type = _depthStencilTex->getType();
+            depthStencilTexViewInfo.format = _depthStencilFmt;
+            _depthStencilTexView->initialize(depthStencilTexViewInfo);
         }
 
         if (_framebuffer)
@@ -168,8 +168,8 @@ void CCVKWindow::resize(uint width, uint height)
             GFXFramebufferInfo fboInfo;
             fboInfo.isOffscreen = _isOffscreen;
             fboInfo.renderPass = _renderPass;
-            fboInfo.colorViews.push_back(_colorTexView);
-            fboInfo.depthStencilView = _depthStencilTexView;
+            fboInfo.colorTextures.push_back(_colorTexView);
+            fboInfo.depthStencilTexture = _depthStencilTexView;
             _framebuffer->initialize(fboInfo);
         }
     }

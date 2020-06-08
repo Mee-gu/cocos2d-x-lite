@@ -2,7 +2,7 @@
 #include "VKFramebuffer.h"
 #include "VKRenderPass.h"
 #include "VKCommands.h"
-#include "VKTextureView.h"
+#include "VKTexture.h"
 #include "VKDevice.h"
 
 NS_CC_BEGIN
@@ -19,8 +19,8 @@ CCVKFramebuffer::~CCVKFramebuffer()
 bool CCVKFramebuffer::initialize(const GFXFramebufferInfo &info)
 {
     _renderPass = info.renderPass;
-    _colorViews = info.colorViews;
-    _depthStencilView = info.depthStencilView;
+    _colorTextures = info.colorTextures;
+    _depthStencilTexture = info.depthStencilTexture;
     _isOffscreen = info.isOffscreen;
 
     _gpuFBO = CC_NEW(CCVKGPUFramebuffer);
@@ -28,16 +28,16 @@ bool CCVKFramebuffer::initialize(const GFXFramebufferInfo &info)
 
     if (_isOffscreen)
     {
-        _gpuFBO->gpuColorViews.resize(_colorViews.size());
-        for (size_t i = 0; i < _colorViews.size(); ++i)
+        _gpuFBO->gpuColorViews.resize(_colorTextures.size());
+        for (size_t i = 0; i < _colorTextures.size(); ++i)
         {
-            CCVKTextureView* colorview = (CCVKTextureView*)_colorViews[i];
-            _gpuFBO->gpuColorViews[i] = colorview->gpuTexView();
+            CCVKTexture* colorview = (CCVKTexture*)_colorTextures[i];
+            _gpuFBO->gpuColorViews[i] = colorview->gpuTextureView();
         }
 
-        if (_depthStencilView)
+        if (_depthStencilTexture)
         {
-            _gpuFBO->gpuDepthStencilView = ((CCVKTextureView*)_depthStencilView)->gpuTexView();
+            _gpuFBO->gpuDepthStencilView = ((CCVKTexture*)_depthStencilTexture)->gpuTextureView();
         }
 
         _gpuFBO->isOffscreen = _isOffscreen;

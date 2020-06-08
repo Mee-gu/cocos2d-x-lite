@@ -13,6 +13,10 @@ public:
     bool initialize(const GFXWindowInfo& info);
     void destroy();
     void resize(uint width, uint height);
+
+private:
+    GFXTexture* _colorTexView = nullptr;
+    GFXTexture* _depthStencilTexView = nullptr;
 };
 
 NS_CC_END

@@ -2,9 +2,9 @@
 #include "VKBindingLayout.h"
 #include "VKCommands.h"
 #include "VKBuffer.h"
-#include "VKTextureView.h"
 #include "VKSampler.h"
 #include "VKDevice.h"
+#include "VKTexture.h"
 
 NS_CC_BEGIN
 
@@ -84,13 +84,14 @@ void CCVKBindingLayout::update()
                 auto info = (VkDescriptorImageInfo*)binding.pImageInfo;
                 info->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-                if (bindingUnit.texView)
+                if (bindingUnit.texture)
                 {
-                    info->imageView = ((CCVKTextureView*)bindingUnit.texView)->gpuTexView()->vkImageView;
+                    info->imageView = ((CCVKTexture*)bindingUnit.texture)->gpuTextureView()->vkImageView;
                 }
 
                 if (bindingUnit.sampler)
                 {
+
                     info->sampler = ((CCVKSampler*)bindingUnit.sampler)->gpuSampler()->vkSampler;
                 }
 
