@@ -21,6 +21,8 @@ class CC_VULKAN_API CCVKTexture : public GFXTexture {
   CC_INLINE CCVKGPUTextureView* gpuTextureView() const { return _gpuTextureView; }
 
  private:
+     bool createTextureView(const GFXTextureViewInfo& info);
+
   CCVKGPUTexture* _gpuTexture = nullptr;
   CCVKGPUTextureView* _gpuTextureView = nullptr;
 };

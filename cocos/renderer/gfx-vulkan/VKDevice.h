@@ -65,7 +65,6 @@ private:
     CCVKGPUSemaphorePool* _gpuSemaphorePool = nullptr;
     CCVKGPUFencePool* _gpuFencePool = nullptr;
     CCVKGPUSwapchain* _gpuSwapchain = nullptr;
-    //std::vector<CCVKTexture*> _depthStencilTextureViews;
     std::vector<CCVKTexture*> _depthStencilTextures;
     CCVKRenderPass* _renderPass = nullptr;
     CCVKBuffer* _stagingBuffer = nullptr;

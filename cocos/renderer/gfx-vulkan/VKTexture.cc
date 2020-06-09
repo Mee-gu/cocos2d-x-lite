@@ -60,30 +60,31 @@ bool CCVKTexture::initialize(const GFXTextureInfo &info)
         return false;
     }
 
-    _gpuTextureView = CC_NEW(CCVKGPUTextureView);
-    _gpuTextureView->gpuTexture = _gpuTexture;
-    _gpuTextureView->type = _type;
-    _gpuTextureView->format = _format;
-    _gpuTextureView->baseLevel = 0;
-    _gpuTextureView->levelCount = _mipLevel;
-    CCVKCmdFuncCreateTextureView((CCVKDevice*)_device, _gpuTextureView);
-
+    GFXTextureViewInfo textureViewInfo;
+    textureViewInfo.texture = this;
+    textureViewInfo.type = _type;
+    textureViewInfo.format = _format;
+    textureViewInfo.baseLevel = 0;
+    textureViewInfo.levelCount = _mipLevel;
+    textureViewInfo.baseLayer = 0;
+    textureViewInfo.layerCount = _arrayLayer;
+    
+    if (!createTextureView(textureViewInfo))
+    {
+        _status = GFXStatus::FAILED;
+        return false;
+    }
+    
+    _status = GFXStatus::SUCCESS;
     return true;
 }
 
 bool CCVKTexture::initialize(const GFXTextureViewInfo& info)
 {
-    if (!info.texture)
-    {
-        CC_LOG_ERROR("CCVKTexture::initialize: texture should not be nullptr when create a texture view.");
-        _status = GFXStatus::FAILED;
-        return false;
-    }
-
-    _type = info.type;
-    _format = info.format;
-    _arrayLayer = info.layerCount;
-    _mipLevel = info.levelCount;
+    _type = info.texture->getType();
+    _format = info.texture->getFormat();
+    _arrayLayer = info.texture->getArrayLayer();
+    _mipLevel = info.texture->getMipLevel();
     _usage = info.texture->getUsage();
     _width = info.texture->getWidth();
     _height = info.texture->getHeight();
@@ -92,14 +93,34 @@ bool CCVKTexture::initialize(const GFXTextureViewInfo& info)
     _flags = info.texture->getFlags();
     _size = GFXFormatSize(_format, _width, _height, _depth);
     
+    if (!createTextureView(info))
+    {
+        _status = GFXStatus::FAILED;
+        return false;
+    }
+
+    _status = GFXStatus::SUCCESS;
+    return true;
+}
+
+bool CCVKTexture::createTextureView(const GFXTextureViewInfo& info)
+{
+    if (!info.texture)
+    {
+        CC_LOG_ERROR("CCVKTexture::createTextureView: texture should not be nullptr.");
+        return false;
+    }
+
+    if (!_gpuTextureView)
+    {
+        _gpuTextureView = CC_NEW(CCVKGPUTextureView);
+    }
     _gpuTextureView->gpuTexture = static_cast<CCVKTexture*>(info.texture)->gpuTexture();
-    _gpuTextureView->type = _type;
-    _gpuTextureView->format = _format;
+    _gpuTextureView->type = info.type;
+    _gpuTextureView->format = info.format;
     _gpuTextureView->baseLevel = info.baseLevel;
     _gpuTextureView->levelCount = info.levelCount;
     CCVKCmdFuncCreateTextureView((CCVKDevice*)_device, _gpuTextureView);
-
-    _status = GFXStatus::SUCCESS;
     return true;
 }
 
@@ -147,6 +168,9 @@ void CCVKTexture::resize(uint width, uint height)
         CCVKCmdFuncResizeTexture((CCVKDevice*)_device, _gpuTexture);
         status.bufferSize -= old_size;
         status.bufferSize += _size;
+       
+        _gpuTextureView->gpuTexture = _gpuTexture;
+        CCVKCmdFuncCreateTextureView((CCVKDevice*)_device, _gpuTextureView);
 
         if (_buffer)
         {
