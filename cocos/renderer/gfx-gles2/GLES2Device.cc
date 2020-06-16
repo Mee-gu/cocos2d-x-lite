@@ -98,7 +98,6 @@ bool GLES2Device::initialize(const GFXDeviceInfo &info) {
     _features[static_cast<uint>(GFXFeature::STENCIL_WRITE_MASK)] = true;
     _features[static_cast<uint>(GFXFeature::FORMAT_RGB8)] = checkExtension("rgb8");
     _features[static_cast<uint>(GFXFeature::FORMAT_D16)] = true;
-    _features[static_cast<uint>(GFXFeature::FORMAT_D16S8)] = false;
     _features[static_cast<uint>(GFXFeature::FORMAT_D24)] = checkExtension("depth24");
     _features[static_cast<uint>(GFXFeature::FORMAT_D24S8)] = checkExtension("packed_depth_stencil");
     _features[static_cast<uint>(GFXFeature::FORMAT_D32F)] = checkExtension("depth32");
