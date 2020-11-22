@@ -49,7 +49,11 @@ if(COCOS_PLATFORM_IOS OR COCOS_PLATFORM_OSX)
 	file(GLOB_RECURSE SOURCE_MM_FILES *.m *.mm)
 endif()
 
-set(ALL_FILES ${HEADER_FILES} ${SOURCE_CPP_FILES} ${SOURCE_C_FILES})
+set(ALL_FILES 
+  ${HEADER_FILES} 
+  ${SOURCE_CPP_FILES} 
+  ${SOURCE_C_FILES} 
+  ${CORE_FILES})
 
 if(COCOS_PLATFORM_IOS OR COCOS_PLATFORM_OSX)
 	set(ALL_FILES ${ALL_FILES} ${SOURCE_MM_FILES})
@@ -79,8 +83,14 @@ else()
 	add_library(${TARGET_NAME} SHARED ${HEADER_FILES} ${ALL_FILES})
 endif()
 
-target_link_libraries(${TARGET_NAME} Core)
-target_include_directories(${TARGET_NAME} PUBLIC ${GFX_EXTERNAL_PATH}/khronos)
+target_link_libraries(${TARGET_NAME} 
+  Core 
+  ${CC_EXTERNAL_LIBS}
+  z)
+target_include_directories(${TARGET_NAME} PUBLIC 
+  ${GFX_EXTERNAL_PATH}/khronos 
+  ${COCOS_EXTERNAL_PATH}/sources
+  ${CC_EXTERNAL_INCLUDES})
 
 set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME CCGFXGLES2)
 set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME_DEBUG CCGFXGLES2_d)
