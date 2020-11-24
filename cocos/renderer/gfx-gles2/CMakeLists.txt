@@ -82,9 +82,37 @@ if (COCOS_STATIC)
 else()
 	add_library(${TARGET_NAME} SHARED ${HEADER_FILES} ${ALL_FILES})
 endif()
-
+find_library(APPKIT_LIBRARY AppKit)
+find_library(ICONV_LIBRARY iconv)
+find_library(AUDIOTOOLBOX_LIBRARY AudioToolBox)
+find_library(FOUNDATION_LIBRARY Foundation)
+find_library(OPENAL_LIBRARY OpenAL)
+find_library(GAMECONTROLLER_LIBRARY GameController)
+find_library(METAL_LIBRARY Metal)
+find_library(METALLIT_LIBRARY MetalKit)
+find_library(SQLITE3_LIBRARY SQLite3)
+find_library(SECURITY_LIBRARY Security)
+find_library(SystemConfiguration_LIBRARY SystemConfiguration)
+find_library(OPENGL_LIBRARY OpenGL)
+find_library(APPKIT_LIBRARY AppKit)
+list(APPEND PLATFORM_SPECIFIC_LIBSSS
+     ${APPKIT_LIBRARY}
+     ${ICONV_LIBRARY}
+    ${AUDIOTOOLBOX_LIBRARY}
+    ${FOUNDATION_LIBRARY}
+    ${OPENAL_LIBRARY}
+    ${GAMECONTROLLER_LIBRARY}
+    ${METAL_LIBRARY}
+    ${METALLIT_LIBRARY}
+    ${SQLITE3_LIBRARY}
+    ${SECURITY_LIBRARY}
+    ${SystemConfiguration_LIBRARY}
+    ${OPENGL_LIBRARY}
+    ${APPKIT_LIBRARY}
+)
 target_link_libraries(${TARGET_NAME} 
-  Core 
+${PLATFORM_SPECIFIC_LIBSSS}  
+Core 
   ${CC_EXTERNAL_LIBS}
   z)
 target_include_directories(${TARGET_NAME} PUBLIC 

@@ -12,6 +12,7 @@
 #include "MTLShader.h"
 #include "MTLPipelineState.h"
 #include "MTLRenderPass.h"
+#include "math/Vec2.h"
 #include <vector>
 
 namespace cc {
