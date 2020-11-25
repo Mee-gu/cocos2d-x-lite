@@ -85,7 +85,7 @@ bool CCMTLCommandBuffer::isRenderingEntireDrawable(const Rect &rect, const CCMTL
 
 void CCMTLCommandBuffer::beginRenderPass(RenderPass *renderPass, Framebuffer *fbo, const Rect &renderArea, const Color *colors, float depth, int stencil) {
     auto isOffscreen = static_cast<CCMTLFramebuffer *>(fbo)->isOffscreen();
-    if (! isOffscreen) {
+    if (!isOffscreen) {
         static_cast<CCMTLRenderPass *>(renderPass)->setColorAttachment(0, _mtkView.currentDrawable.texture, 0);
         static_cast<CCMTLRenderPass *>(renderPass)->setDepthStencilAttachment(_mtkView.depthStencilTexture, 0);
     }
@@ -389,28 +389,23 @@ void CCMTLCommandBuffer::copyBuffersToTexture(const uint8_t *const *buffers, Tex
         totalSize += stagingRegion.sourceBytesPerImage;
     }
 
-    CCMTLGPUBuffer stagingBuffer;
-    stagingBuffer.size = totalSize;
-    auto texelSize = mu::getBlockSzie(convertedFormat);
-    _mtlDevice->gpuStagingBufferPool()->alloc(&stagingBuffer, texelSize);
-
     size_t offset = 0;
     id<MTLBlitCommandEncoder> encoder = [_mtlCommandBuffer blitCommandEncoder];
     id<MTLTexture> dstTexture = mtlTexture->getMTLTexture();
+    const bool isArrayTexture = mtlTexture->isArray();
     for (size_t i = 0; i < count; i++) {
         const auto &stagingRegion = stagingRegions[i];
         const auto convertedData = mu::convertData(buffers[i], bufferSize[i], format);
-        memcpy(stagingBuffer.mappedData + offset, convertedData, stagingRegion.sourceBytesPerImage);
-
-        [encoder copyFromBuffer:stagingBuffer.mtlBuffer
-                   sourceOffset:stagingBuffer.startOffset + offset
-              sourceBytesPerRow:stagingRegion.sourceBytesPerRow
-            sourceBytesPerImage:stagingRegion.sourceBytesPerImage
-                     sourceSize:stagingRegion.sourceSize
-                      toTexture:dstTexture
-               destinationSlice:stagingRegion.destinationSlice
-               destinationLevel:stagingRegion.destinationLevel
-              destinationOrigin:stagingRegion.destinationOrigin];
+        const auto sourceBytesPerImage = isArrayTexture ? stagingRegion.sourceBytesPerImage : 0;
+        MTLRegion region = {stagingRegion.destinationOrigin, stagingRegion.sourceSize};
+        auto bytesPerRow = mtlTexture->isPVRTC() ? 0 : stagingRegion.sourceBytesPerRow;
+        auto bytesPerImage = mtlTexture->isPVRTC() ? 0 : sourceBytesPerImage;
+        [dstTexture replaceRegion:region
+                      mipmapLevel:stagingRegion.destinationLevel
+                            slice:stagingRegion.destinationSlice
+                        withBytes:convertedData
+                      bytesPerRow:bytesPerRow
+                    bytesPerImage:bytesPerImage];
 
         offset += stagingRegion.sourceBytesPerImage;
         if (convertedData != buffers[i]) {
